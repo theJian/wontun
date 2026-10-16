@@ -3,8 +3,8 @@ import SwiftUI
 import Testing
 @testable import Wontun
 
-@MainActor struct FixedSidebarTests {
-    @Test func swiftUISidebarAttachesToLockedNativeItem() async throws {
+@MainActor struct BoundedSidebarTests {
+    @Test func swiftUISidebarResizesWithinNativeBounds() async throws {
         _ = NSApplication.shared
         let model = AppModel()
         let host = NSHostingController(rootView: ContentView(model: model))
@@ -26,13 +26,12 @@ import Testing
         let sidebar = try #require(controller.splitViewItems.first)
         #expect(!sidebar.canCollapse)
         #expect(!sidebar.canCollapseFromWindowResize)
-        #expect(sidebar.minimumThickness == 220)
-        #expect(sidebar.maximumThickness == 220)
+        #expect(sidebar.minimumThickness == 180)
+        #expect(sidebar.maximumThickness == 360)
         #expect(!controller.splitView(split, canCollapseSubview: sidebar.viewController.view))
         let divider = NSRect(x: 220, y: 0, width: split.dividerThickness, height: split.bounds.height)
-        #expect(controller.splitView(split, effectiveRect: divider.insetBy(dx: -5, dy: 0),
+        #expect(!controller.splitView(split, effectiveRect: divider.insetBy(dx: -5, dy: 0),
                                      forDrawnRect: divider, ofDividerAt: 0).isEmpty)
-        #expect(controller.splitView(split, additionalEffectiveRectOfDividerAt: 0).isEmpty)
         controller.toggleSidebar(nil)
         #expect(!sidebar.isCollapsed)
 
@@ -42,28 +41,43 @@ import Testing
         await withCheckedContinuation { continuation in
             DispatchQueue.main.async { continuation.resume() }
         }
-        for position: CGFloat in [350, 0] {
+        // Native sidebar chrome can add an inset between divider position and content width.
+        for (position, expectedWidths): (CGFloat, ClosedRange<CGFloat>) in [
+            (300, 181...359), (500, 360...360), (0, 180...180), (280, 181...359)
+        ] {
             split.setPosition(position, ofDividerAt: 0)
             window.contentView?.layoutSubtreeIfNeeded()
-            #expect(abs(sidebar.viewController.view.frame.width - 220) < 1)
+            #expect(expectedWidths.contains(sidebar.viewController.view.frame.width))
             #expect(!sidebar.isCollapsed)
         }
 
+        let resizedWidth = sidebar.viewController.view.frame.width
+        model.section = .logs
+        window.contentView?.layoutSubtreeIfNeeded()
+        await withCheckedContinuation { continuation in
+            DispatchQueue.main.async { continuation.resume() }
+        }
+        window.contentView?.layoutSubtreeIfNeeded()
+        #expect(abs(sidebar.viewController.view.frame.width - resizedWidth) < 1)
+        #expect(sidebar.minimumThickness == 180)
+        #expect(sidebar.maximumThickness == 360)
+
         window.setContentSize(NSSize(width: 950, height: 650))
         window.contentView?.layoutSubtreeIfNeeded()
-        #expect(abs(sidebar.viewController.view.frame.width - 220) < 1)
+        #expect(sidebar.viewController.view.frame.width >= 180)
+        #expect(sidebar.viewController.view.frame.width <= 360)
         #expect(!sidebar.isCollapsed)
     }
 
-    @Test func lockedSidebarStaysExpandedAndFixedWidth() {
+    @Test func boundedSidebarStaysExpandedAndKeepsWidthLimits() {
         let sidebar = NSSplitViewItem(sidebarWithViewController: NSViewController())
-        sidebar.lockSidebar(width: 220)
+        sidebar.constrainSidebar(minWidth: 180, maxWidth: 360)
 
         #expect(!sidebar.canCollapse)
         #expect(!sidebar.canCollapseFromWindowResize)
         #expect(!sidebar.isCollapsed)
-        #expect(sidebar.minimumThickness == 220)
-        #expect(sidebar.maximumThickness == 220)
+        #expect(sidebar.minimumThickness == 180)
+        #expect(sidebar.maximumThickness == 360)
 
         // A subsequent SwiftUI setter must not re-enable divider collapsing.
         sidebar.canCollapse = true
@@ -72,13 +86,13 @@ import Testing
         sidebar.maximumThickness = 500
         #expect(!sidebar.canCollapse)
         #expect(!sidebar.canCollapseFromWindowResize)
-        #expect(sidebar.minimumThickness == 220)
-        #expect(sidebar.maximumThickness == 220)
+        #expect(sidebar.minimumThickness == 180)
+        #expect(sidebar.maximumThickness == 360)
     }
 
     @Test func otherSplitViewItemsKeepTheirCollapseBehavior() {
-        let locked = NSSplitViewItem(sidebarWithViewController: NSViewController())
-        locked.lockSidebar(width: 220)
+        let bounded = NSSplitViewItem(sidebarWithViewController: NSViewController())
+        bounded.constrainSidebar(minWidth: 180, maxWidth: 360)
         let other = NSSplitViewItem(sidebarWithViewController: NSViewController())
 
         other.canCollapse = true
