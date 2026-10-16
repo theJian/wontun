@@ -16,7 +16,8 @@ struct ContentView: View {
             .listStyle(.sidebar)
             .safeAreaInset(edge: .bottom, spacing: 0) { connectionControls }
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
-            .navigationSplitViewColumnWidth(min: 210, ideal: 220, max: 250)
+            .navigationSplitViewColumnWidth(min: 220, ideal: 220, max: 220)
+            .background(FixedSidebar(width: 220))
             .toolbar(removing: .sidebarToggle)
             .toolbar {
                 // Keep the native sidebar toolbar region after removing its only control.
