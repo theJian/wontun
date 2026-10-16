@@ -19,13 +19,17 @@ import SwiftUI
             }
         }
         Settings { SettingsView(model: model).frame(width: 620, height: 540) }
-        MenuBarExtra("Wontun", systemImage: model.status.running ? "network.badge.shield.half.filled" : "network") {
+        MenuBarExtra {
             Text(model.status.running ? "Running · \(model.active?.name ?? "Profile")" : "Disconnected")
             Button(model.status.running ? "Disconnect" : "Connect") { model.toggleConnection() }
                 .disabled(model.busy || !model.ready || model.selected == nil)
             Divider()
             Button("Show Wontun") { NSApp.activate(ignoringOtherApps: true); NSApp.windows.first { $0.canBecomeMain }?.makeKeyAndOrderFront(nil) }
             Button("Quit Wontun") { NSApp.terminate(nil) }.keyboardShortcut("q")
+        } label: {
+            Image(nsImage: TrayIcon.image)
+                .opacity(model.status.running ? 1 : 0.55)
+                .accessibilityLabel("Wontun · \(model.status.running ? "Running" : "Disconnected")")
         }
     }
 }
