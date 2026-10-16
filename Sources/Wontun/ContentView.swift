@@ -50,6 +50,8 @@ struct ContentView: View {
             }
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
             .background(Color(nsColor: .controlBackgroundColor))
+            .ignoresSafeArea(.container, edges: .top)
+            .toolbarBackground(.hidden, for: .windowToolbar)
         }
         .frame(minWidth: 900, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity)
         .sheet(isPresented: $model.showImport, onDismiss: { model.error = nil }) { ImportView(model: model) }
