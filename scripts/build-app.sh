@@ -15,6 +15,8 @@ cp "$bin_path/Wontun" "$app/Contents/MacOS/Wontun"
 # Cargo calls its debug profile `dev`, while artifacts are written to target/debug.
 cp "core/target/$configuration/wontun-core" "$app/Contents/MacOS/wontun-core"
 cp Resources/Info.plist "$app/Contents/Info.plist"
+bash scripts/build-icon.sh
+cp Resources/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
 ./scripts/bundle-sing-box.sh "$app"
 codesign --force --sign - "$app/Contents/MacOS/sing-box"
 codesign --force --deep --sign - "$app"
