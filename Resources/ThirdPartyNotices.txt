@@ -1,0 +1,15 @@
+Wontun includes sing-box 1.14.3, Copyright (C) 2022 nekohasekai.
+License: GNU General Public License v3 or later, with the additional
+conditions contained in Licenses/sing-box.txt beside this notice.
+
+Upstream project and corresponding source for this version:
+https://github.com/SagerNet/sing-box/tree/v1.14.3
+Source archive:
+https://github.com/SagerNet/sing-box/archive/refs/tags/v1.14.3.tar.gz
+Official release binaries and build information:
+https://github.com/SagerNet/sing-box/releases/tag/v1.14.3
+https://sing-box.sagernet.org/installation/build-from-source/
+
+The bundled executable comes from the official release archive. Wontun's
+packaging script pins the archive's SHA-256 digest and verifies it before
+extracting the executable. No core is downloaded when the app is launched.
