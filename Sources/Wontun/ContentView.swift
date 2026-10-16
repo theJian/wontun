@@ -8,39 +8,16 @@ struct ContentView: View {
     @State private var pendingDelete: Profile?
     var body: some View {
         NavigationSplitView {
-            VStack(alignment: .leading, spacing: 24) {
-                HStack(spacing: 10) {
-                    Image(systemName: "network").font(.title).foregroundStyle(.blue)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Wontun").font(.title2.bold())
-                        Text("YOUR NETWORK, NATIVE.").font(.system(size: 8, weight: .semibold, design: .monospaced)).foregroundStyle(.secondary)
-                    }
-                }.padding(.horizontal, 18).padding(.top, 22)
-                List(selection: $model.section) {
-                    ForEach(AppModel.Section.allCases) { section in
-                        Label(section.rawValue, systemImage: section.icon).tag(section)
-                    }
-                }.listStyle(.sidebar)
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 7) {
-                        Circle().fill(model.status.running ? Color.green : Color.secondary).frame(width: 7, height: 7)
-                        Text(model.status.running ? "Core running" : "Disconnected").font(.callout.weight(.medium))
-                    }
-                    if model.status.running {
-                        Text(model.active?.name ?? "Custom profile").font(.caption).lineLimit(1)
-                        Text(Duration.seconds(model.status.uptime).formatted(.time(pattern: .hourMinuteSecond))).font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary)
-                    } else {
-                        Text("A quieter way to connect.").font(.caption).foregroundStyle(.secondary)
-                    }
-                    Button(action: model.toggleConnection) {
-                        HStack { Spacer(); if model.busy { ProgressView().controlSize(.mini) }; Text(model.status.running ? "Disconnect" : "Connect"); Spacer() }
-                    }.buttonStyle(.borderedProminent)
-                        .disabled(model.busy || !model.ready || model.selected == nil)
-                    if !model.ready && !model.busy {
-                        Button("Retry backend") { Task { await model.perform("snapshot") } }
-                    }
-                }.padding(16).background(.quaternary.opacity(0.45), in: RoundedRectangle(cornerRadius: 12)).padding(14)
-            }.navigationSplitViewColumnWidth(min: 210, ideal: 220, max: 250)
+            List(selection: $model.section) {
+                ForEach(AppModel.Section.allCases) { section in
+                    Label(section.rawValue, systemImage: section.icon).tag(section)
+                }
+            }
+            .listStyle(.sidebar)
+            .safeAreaInset(edge: .top, spacing: 0) { sidebarHeader }
+            .safeAreaInset(edge: .bottom, spacing: 0) { connectionControls }
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+            .navigationSplitViewColumnWidth(min: 210, ideal: 220, max: 250)
         } detail: {
             VStack(spacing: 0) {
                 HStack(alignment: .top) {
@@ -56,16 +33,21 @@ struct ContentView: View {
                     }
                 }.fixedSize(horizontal: false, vertical: true).padding(28)
                 Divider()
-                switch model.section {
-                case .profiles: profiles
-                case .subscriptions: SubscriptionsView(model: model)
-                case .routing: RoutingView(model: model)
-                case .logs: LogsView(model: model)
-                case .settings: SettingsView(model: model)
+                Group {
+                    switch model.section {
+                    case .profiles: profiles
+                    case .subscriptions: SubscriptionsView(model: model)
+                    case .routing: RoutingView(model: model)
+                    case .logs: LogsView(model: model)
+                    case .settings: SettingsView(model: model)
+                    }
                 }
-            }.background(Color(nsColor: .controlBackgroundColor))
+                .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
+            }
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
+            .background(Color(nsColor: .controlBackgroundColor))
         }
-        .frame(minWidth: 900, minHeight: 600)
+        .frame(minWidth: 900, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity)
         .sheet(isPresented: $model.showImport, onDismiss: { model.error = nil }) { ImportView(model: model) }
         .sheet(item: $editor, onDismiss: { model.error = nil }) { ProfileEditor(model: model, profile: $0) }
         .sheet(isPresented: Binding(get: { preview != nil }, set: { if !$0 { preview = nil } })) {
@@ -86,6 +68,45 @@ struct ContentView: View {
             }
         } message: { Text("This removes the saved profile and its credentials.") }
     }
+    private var sidebarHeader: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "network").font(.title).foregroundStyle(.blue)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Wontun").font(.title2.bold())
+                Text("YOUR NETWORK, NATIVE.").font(.system(size: 8, weight: .semibold, design: .monospaced)).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(18)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var connectionControls: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 7) {
+                Circle().fill(model.status.running ? Color.green : Color.secondary).frame(width: 7, height: 7)
+                Text(model.status.running ? "Core running" : "Disconnected").font(.callout.weight(.medium))
+            }
+            if model.status.running {
+                Text(model.active?.name ?? "Custom profile").font(.caption).lineLimit(1)
+                Text(Duration.seconds(model.status.uptime).formatted(.time(pattern: .hourMinuteSecond))).font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary)
+            } else {
+                Text("A quieter way to connect.").font(.caption).foregroundStyle(.secondary)
+            }
+            Button(action: model.toggleConnection) {
+                HStack { Spacer(); if model.busy { ProgressView().controlSize(.mini) }; Text(model.status.running ? "Disconnect" : "Connect"); Spacer() }
+            }.buttonStyle(.borderedProminent)
+                .disabled(model.busy || !model.ready || model.selected == nil)
+            if !model.ready && !model.busy {
+                Button("Retry backend") { Task { await model.perform("snapshot") } }
+            }
+        }
+        .padding(16)
+        .background(.quaternary.opacity(0.45), in: RoundedRectangle(cornerRadius: 12))
+        .padding(14)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
     var subtitle: String {
         switch model.section {
         case .profiles: "Choose a route to the world."
@@ -111,6 +132,7 @@ struct ContentView: View {
                 } actions: {
                     Button("Import Profiles…") { model.showImport = true }.buttonStyle(.borderedProminent)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 Table(model.filteredProfiles, selection: Binding(get: { model.state.selectedId }, set: { if let id = $0 { model.select(id) } })) {
                     TableColumn("Profile") { profile in
@@ -144,8 +166,9 @@ struct ContentView: View {
                     Button("Edit…") { editor = selected }.disabled(model.status.running || model.busy)
                     Button("Configuration…") { Task { preview = await model.preview() } }.disabled(model.busy)
                 } else { Text("Select a profile to connect").foregroundStyle(.secondary); Spacer() }
-            }.padding(24)
+            }.padding(24).fixedSize(horizontal: false, vertical: true)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 

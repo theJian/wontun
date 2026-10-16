@@ -12,9 +12,10 @@ struct SubscriptionsView: View {
                 Spacer()
                 Button { model.subscriptionSheetOpen = true } label: { Label("Add Subscription", systemImage: "plus") }
                     .buttonStyle(.borderedProminent).disabled(model.busy || model.status.running)
-            }
+            }.fixedSize(horizontal: false, vertical: true)
             if model.state.subscriptions.isEmpty {
                 ContentUnavailableView("Always up to date", systemImage: "arrow.triangle.2.circlepath", description: Text("Add an HTTPS subscription URL to import and refresh a collection of profiles."))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
                     ForEach(model.state.subscriptions) { sub in
@@ -33,7 +34,10 @@ struct SubscriptionsView: View {
                 }.listStyle(.inset)
             }
             Text("Refreshes are manual. A failed download or invalid response preserves your existing profiles.").font(.caption).foregroundStyle(.secondary)
-        }.padding(28)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(28)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .sheet(isPresented: $model.subscriptionSheetOpen, onDismiss: { model.error = nil }) {
                 VStack(alignment: .leading, spacing: 18) {
                     Text("Add subscription").font(.title2.bold())
@@ -81,6 +85,7 @@ struct LogsView: View {
             Divider()
             if logs.isEmpty {
                 ContentUnavailableView("Nothing to report", systemImage: "text.alignleft", description: Text("Start the core to see its output here."))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -98,5 +103,6 @@ struct LogsView: View {
             Divider()
             HStack { Text("Last 500 lines · updates every second"); Spacer(); Text(model.status.running ? "LIVE" : "IDLE") }.font(.system(.caption2, design: .monospaced)).foregroundStyle(.secondary).padding(14)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
