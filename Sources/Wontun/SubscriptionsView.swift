@@ -14,7 +14,11 @@ struct SubscriptionsView: View {
                     .buttonStyle(.borderedProminent).disabled(model.busy || model.status.running)
             }.fixedSize(horizontal: false, vertical: true)
             if model.state.subscriptions.isEmpty {
-                ContentUnavailableView("Always up to date", systemImage: "arrow.triangle.2.circlepath", description: Text("Add an HTTPS subscription URL to import and refresh a collection of profiles."))
+                ContentUnavailableView {
+                    Text("No subscriptions")
+                } description: {
+                    Text("Add an HTTPS subscription URL to import and refresh a collection of profiles.")
+                }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {

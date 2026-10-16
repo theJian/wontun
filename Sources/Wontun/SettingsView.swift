@@ -46,7 +46,6 @@ struct SettingsView: View {
                 }
             }
             SwiftUI.Section("Wontun 0.1") {
-                Text("Native SwiftUI interface. Rust application core. Inspired by Throne.").foregroundStyle(.secondary)
                 Text("Profiles and subscription credentials are stored locally in Application Support/Wontun with owner-only file permissions.").font(.caption).foregroundStyle(.secondary)
             }
         }.formStyle(.grouped).onAppear { settings = model.state.settings; port = String(settings.mixedPort) }

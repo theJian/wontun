@@ -9,6 +9,7 @@ import SwiftUI
             ContentView(model: model)
                 .task { delegate.model = model; await model.start() }
         }
+        .windowToolbarStyle(.unified(showsTitle: false))
         .defaultSize(width: 1120, height: 740)
         .commands {
             CommandGroup(after: .newItem) {

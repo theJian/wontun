@@ -7,24 +7,27 @@ struct ContentView: View {
     @State private var preview: String?
     @State private var pendingDelete: Profile?
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: .constant(.all)) {
             List(selection: $model.section) {
                 ForEach(AppModel.Section.allCases) { section in
                     Label(section.rawValue, systemImage: section.icon).tag(section)
                 }
             }
             .listStyle(.sidebar)
-            .safeAreaInset(edge: .top, spacing: 0) { sidebarHeader }
             .safeAreaInset(edge: .bottom, spacing: 0) { connectionControls }
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
             .navigationSplitViewColumnWidth(min: 210, ideal: 220, max: 250)
+            .toolbar(removing: .sidebarToggle)
+            .toolbar {
+                // Keep the native sidebar toolbar region after removing its only control.
+                ToolbarItem(placement: .navigation) {
+                    Color.clear.frame(width: 1, height: 1).accessibilityHidden(true)
+                }
+            }
         } detail: {
             VStack(spacing: 0) {
                 HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text(model.section.rawValue).font(.largeTitle.bold())
-                        Text(subtitle).font(.callout).foregroundStyle(.secondary)
-                    }
+                    Text(model.section.rawValue).font(.largeTitle.bold())
                     Spacer()
                     if model.busy { ProgressView().controlSize(.small).padding(.top, 10) }
                     if model.section == .profiles {
@@ -68,19 +71,6 @@ struct ContentView: View {
             }
         } message: { Text("This removes the saved profile and its credentials.") }
     }
-    private var sidebarHeader: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "network").font(.title).foregroundStyle(.blue)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Wontun").font(.title2.bold())
-                Text("YOUR NETWORK, NATIVE.").font(.system(size: 8, weight: .semibold, design: .monospaced)).foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(18)
-        .fixedSize(horizontal: false, vertical: true)
-    }
-
     private var connectionControls: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 7) {
@@ -90,8 +80,6 @@ struct ContentView: View {
             if model.status.running {
                 Text(model.active?.name ?? "Custom profile").font(.caption).lineLimit(1)
                 Text(Duration.seconds(model.status.uptime).formatted(.time(pattern: .hourMinuteSecond))).font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary)
-            } else {
-                Text("A quieter way to connect.").font(.caption).foregroundStyle(.secondary)
             }
             Button(action: model.toggleConnection) {
                 HStack { Spacer(); if model.busy { ProgressView().controlSize(.mini) }; Text(model.status.running ? "Disconnect" : "Connect"); Spacer() }
@@ -107,15 +95,6 @@ struct ContentView: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    var subtitle: String {
-        switch model.section {
-        case .profiles: "Choose a route to the world."
-        case .subscriptions: "Keep your server collections together."
-        case .routing: "Decide what goes where."
-        case .logs: "A live view of your sing-box core."
-        case .settings: "Make yourself at home."
-        }
-    }
     var profiles: some View {
         VStack(spacing: 0) {
             HStack {
@@ -126,7 +105,7 @@ struct ContentView: View {
             }.padding(14).background(.background).clipShape(RoundedRectangle(cornerRadius: 8)).padding(.horizontal, 28).padding(.vertical, 20)
             if model.state.profiles.isEmpty {
                 ContentUnavailableView {
-                    Label("Your first connection awaits", systemImage: "network")
+                    Text("No profiles")
                 } description: {
                     Text("Import a share link or sing-box JSON, or add a subscription to get started.")
                 } actions: {
