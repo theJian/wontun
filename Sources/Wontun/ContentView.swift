@@ -10,7 +10,15 @@ struct ContentView: View {
         NavigationSplitView(columnVisibility: .constant(.all)) {
             List(selection: $model.section) {
                 ForEach(AppModel.Section.allCases) { section in
-                    Label(section.rawValue, systemImage: section.icon).tag(section)
+                    Label {
+                        Text(section.rawValue)
+                    } icon: {
+                        Image(systemName: section.icon)
+                            .foregroundStyle(AppTheme.accent)
+                    }
+                        .fontWeight(model.section == section ? .bold : .regular)
+                        .listItemTint(.monochrome)
+                        .tag(section)
                 }
             }
             .listStyle(.sidebar)
@@ -119,7 +127,7 @@ struct ContentView: View {
                 Table(model.filteredProfiles, selection: Binding(get: { model.state.selectedId }, set: { if let id = $0 { model.select(id) } })) {
                     TableColumn("Profile") { profile in
                         HStack(spacing: 10) {
-                            Image(systemName: profile.id == model.status.activeId ? "network.badge.shield.half.filled" : "globe").foregroundStyle(profile.id == model.status.activeId ? .green : .blue)
+                            Image(systemName: profile.id == model.status.activeId ? "network.badge.shield.half.filled" : "globe").foregroundStyle(profile.id == model.status.activeId ? .green : AppTheme.accent)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(profile.name).fontWeight(.medium)
                                 Text(profile.server).font(.caption).foregroundStyle(.secondary)

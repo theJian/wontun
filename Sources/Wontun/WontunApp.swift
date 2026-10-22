@@ -7,6 +7,7 @@ import SwiftUI
     var body: some Scene {
         WindowGroup("Wontun") {
             ContentView(model: model)
+                .tint(AppTheme.accent)
                 .task { delegate.model = model; await model.start() }
         }
         .windowToolbarStyle(.unified(showsTitle: false))
@@ -18,7 +19,7 @@ import SwiftUI
                     .keyboardShortcut("k").disabled(model.busy || !model.ready || model.selected == nil)
             }
         }
-        Settings { SettingsView(model: model).frame(width: 620, height: 540) }
+        Settings { SettingsView(model: model).tint(AppTheme.accent).frame(width: 620, height: 540) }
         MenuBarExtra {
             Text(model.status.running ? "Running · \(model.active?.name ?? "Profile")" : "Disconnected")
             Button(model.status.running ? "Disconnect" : "Connect") { model.toggleConnection() }
